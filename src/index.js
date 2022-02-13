@@ -54,6 +54,11 @@ background.pointermove = (e) => {
 background.mouseup = () => {
     background.drawing = false;
 }
+background.doClear = () => {
+    for (let i = 0; i < background.children.length; i++) {
+        background.removeChild(background.children[i]);
+    }
+}
 
 const colors = [
     {name: "black", color: "000000"},
@@ -127,6 +132,7 @@ clearButton.mouseout = () => {
     clearButton.drawRect(-3, -3, 62, 24);
 }
 const confirmClear = () => {
+    toggleStageInteractive();
     const overlay = new PIXI.Graphics();
     overlay.beginFill(0x000000);
     overlay.drawRect(0, 0, 1000, 1000);
@@ -135,7 +141,60 @@ const confirmClear = () => {
     overlay.alpha = 0.3;
     overlay.endFill();
     app.stage.addChild(overlay);
-    toggleStageInteractive();
+    const dialogContainer = new PIXI.Container();
+    const dialog = new PIXI.Graphics();
+    dialog.beginFill(0xffffff);
+    dialog.lineStyle(1, 0x00000);
+    dialog.drawRoundedRect(app.view.height / 2, app.view.width / 6, 300, 170, 10);
+    const title = new PIXI.Text('Are you sure?', new PIXI.TextStyle({fontSize: 25, fontWeight: 'bold'}))
+    dialog.addChild(title);
+    dialog.endFill();
+    dialogContainer.addChild(dialog);
+    app.stage.addChild(dialogContainer);
+    title.x += 320, title.y += 140;
+    dialogContainer.addChild(title);
+    const msg = 'Select yes to confirm that you \nwould like to clear the canvas. \n\t\t\t\t\t\t\t\tThis is irreversible.';
+    const message = new PIXI.Text(msg, new PIXI.TextStyle({fontSize: 20}));
+    dialogContainer.addChild(message);
+    message.y = title.y + 30;
+    message.x = title.x - 50;
+    const buttons = [
+        {text: "Cancel"},
+        {text: "Yes"}
+    ]
+    for (var i = 0; i < buttons.length; i++) {
+        const button = new PIXI.Graphics();
+        button.beginFill(0xc9c9c9);
+        button.lineStyle(1, 0x000000);
+        button.drawRoundedRect(30, 23, 65, 25, 5);
+        button.endFill();
+        button.x = message.x + 20 + i * 95
+        button.y = message.y + 60;
+        const buttonText = new PIXI.Text(buttons[i].text, new PIXI.TextStyle({fontSize: 15}))
+        buttonText.x += buttons[i].text === "Yes"
+            ? 48
+            : 37;
+        buttonText.y += 26;
+        button.interactive = true;
+        button.buttonMode = true;
+        button.mouseover = () => {
+            button.clear();
+            button.beginFill(0x45A9FF);
+            button.lineStyle(1, 0x000000);
+            button.drawRoundedRect(30, 23, 65, 25, 5);
+            button.endFill();
+        }
+        button.mouseout = () => {
+            button.clear();
+            button.beginFill(0xc9c9c9);
+            button.lineStyle(1, 0x000000);
+            button.drawRoundedRect(30, 23, 65, 25, 5);
+            button.endFill();
+        }
+        button.addChild(buttonText);
+        dialogContainer.addChild(button);
+    }
+
 }
 clearButton.click = () => confirmClear();
 app.stage.addChild(clearButton);
