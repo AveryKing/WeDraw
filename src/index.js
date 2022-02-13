@@ -33,9 +33,13 @@ const draw = ({x, y}) => {
     const point = new PIXI.Graphics();
     point.beginFill(selectedColor._fillStyle.color);
     point.lineStyle(1, selectedColor._fillStyle.color);
-    point.drawCircle(x, y, 4, 4);
+    point.drawCircle(0,0, 4, 4);
     point.endFill();
-    app.stage.addChild(point);
+    var texture = app.renderer.generateTexture(point);
+    var sprite = new PIXI.Sprite(texture);
+    background.addChild(sprite);
+    sprite.x = x, sprite.y = y;
+    sprite.anchor.set(4,1);
 }
 
 background.mousedown = (e) => {
@@ -55,9 +59,12 @@ background.mouseup = () => {
     background.drawing = false;
 }
 background.doClear = () => {
-    for (let i = 0; i < background.children.length; i++) {
-        background.removeChild(background.children[i]);
+    while(background.children.length > 0) {
+        background.children.forEach(child => {
+            child.destroy();
+        })
     }
+
 }
 
 const colors = [
@@ -75,7 +82,6 @@ const updateSelectedColor = (color) => {
     if (selectedColor) selectedColor.removeSelected();
     selectedColor = color;
     color.makeSelected();
-    console.log(color)
 }
 for (let i = 0; i < colors.length; i++) {
     const color = new PIXI.Graphics();
@@ -190,6 +196,12 @@ const confirmClear = () => {
             button.lineStyle(1, 0x000000);
             button.drawRoundedRect(30, 23, 65, 25, 5);
             button.endFill();
+        }
+        button.click = () => {
+            background.doClear();
+            dialogContainer.destroy();
+            overlay.destroy();
+            toggleStageInteractive();
         }
         button.addChild(buttonText);
         dialogContainer.addChild(button);
