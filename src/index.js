@@ -95,24 +95,6 @@ for(let i=0; i<colors.length; i++) {
     }
     app.stage.addChild(color);
 }
-
-function onDragStart(event) {
-    this.data = event.data;
-    this.alpha = 0.5;
-    this.dragging = true;
-}
-function onDragEnd() {
-    this.alpha = 1;
-    this.dragging = false;
-    this.data = null;
-}
-function onDragMove() {
-    if (this.dragging) {
-        var newPosition = this.data.getLocalPosition(this.parent);
-        this.position.x = newPosition.x;
-        this.position.y = newPosition.y;
-    }
-}
 artBoard.addChild(background);
 app.stage.addChild(artBoard);
 document.body.appendChild(app.view)
