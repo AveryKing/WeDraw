@@ -40,10 +40,12 @@ const draw = ({x, y}, introScreen = false, color) => {
 const header = PIXI.Sprite.from('https://i.imgur.com/S8iM1Um.png');
 header.scale.set(0.8)
 header.x = 200;
+header.zIndex = 1000;
 header.y = 100;
 app.stage.addChild(header);
 gsap.from(header, {
-    duration: 6,
+    duration: 3,
+    y: -300,
     alpha: 0,
     ease: "bounce.out"
 })
@@ -56,72 +58,94 @@ const penColors = [
     {name: "green", color: "087B00"},
     {name: "yellow", color: "FFDC00"},
     {name: "purple", color: "AD00FF"},
-]
-/// Auto drawing pens for intro screen ///
-const penUrl = 'https://raw.githubusercontent.com/AveryKing/WeDraw/6914e51bbf45d821cc2d707b5f29a7196444003e/create_black_36dp.svg';
-const autoPenPaths = [
-    [{"x": 731, "y": 458}, {"x": 778, "y": 327}, {"x": 659, "y": 199}, {"x": 743, "y": 60}],
-    [{"x": 147, "y": 44}, {"x": 57, "y": 179}, {"x": 195, "y": 319}]
-]
-const allPenDetails = [
-    {
-        color: "0xff0000", path: autoPenPaths[0],
-        pos: {x: 731, y: 458}, rotation: 180,
-        anchor: {x: 0.9, y: 1.5}, stopPos: {y: 450}
-    },
-    {
-        color: "0x0036ff", path: autoPenPaths[1],
-        pos: {x: 114, y: 15}, rotation: 0, stopPos: {},
-        anchor: {x: 0, y: 0}
-    }
 ];
-/** AutoPens Structure:
- * [{autoPen}, {autoPen}, ...]
- * autoPen: {sprite, drawInterval, path,color}
- */
-const autoPens = [];
-for (let i = 0; i < allPenDetails.length; i++) {
-    const penDetails = allPenDetails[i];
-    const penObject = {};
-    const pen = PIXI.Sprite.from(penUrl);
-    pen.x = penDetails.pos.x, pen.y = penDetails.pos.y;
-    pen.rotation = penDetails.rotation;
-    pen.anchor.set(penDetails.anchor.x, penDetails.anchor.y);
-    penObject.sprite = pen;
-    penObject.color = penDetails.color;
-    penObject.path = penDetails.path;
-    penObject.drawInterval = setInterval(() => {
-        draw({'x': pen.x, 'y': pen.y}, true, penObject.color);
-    }, 1);
-    app.stage.addChild(pen)
-    gsap.from(pen, {
-        duration: 10,
-        repeat: 0,
-        ease: "power1.inOut",
-        motionPath: {
-            path: penObject.path,
-            curviness: 0.7
-        }
-    });
-}
-/*
-setInterval(() => {
-    if (pen.y > 450) {
-        gsap.to(pen, {alpha: 0, duration: 3})
-        clearInterval(redPenInterval);
-    }
-}, 1)*/
 
-/*
-gsap.from(pen2, {
-    duration: 10,
-    repeat: 0,
-    ease: "power1.inOut",
-    motionPath: {
-        path: path2,
-        curviness: 0.7
+const startAutoPens = () => {
+    /// Auto drawing pens for intro screen ///
+    const penUrl = 'https://raw.githubusercontent.com/AveryKing/WeDraw/6914e51bbf45d821cc2d707b5f29a7196444003e/create_black_36dp.svg';
+    const autoPenPaths = [
+        [{"x": 731, "y": 458}, {"x": 778, "y": 327}, {"x": 659, "y": 199}, {"x": 743, "y": 60}],
+        [{"x": 147, "y": 44}, {"x": 57, "y": 179}, {"x": 195, "y": 319}],
+        [{"x": 622, "y": 164}, {"x": 409, "y": 348}, {"x": 684, "y": 431}],
+        [{"x": 28, "y": 359}, {"x": 126, "y": 205}, {"x": 309, "y": 248}, {"x": 344, "y": 426}, {"x": 549, "y": 325}],
+        [{"x": 694, "y": 15}, {"x": 443, "y": 93}, {"x": 233, "y": 10}]
+
+
+    ]
+    const allPenDetails = [
+        {
+            color: "0xff0000", path: autoPenPaths[0],
+            pos: {x: 731, y: 458}, rotation: 180,
+            anchor: {x: 0.9, y: 1.5}, stopPos: {y: 450, type: "greater"}
+        },
+        {
+            color: "0x0036ff", path: autoPenPaths[1],
+            pos: {x: 114, y: 15}, rotation: 0, stopPos: {y: 45, type: "less"},
+            anchor: {x: 0, y: 0}
+        },
+        {
+            color: "0xAD00FF", path: autoPenPaths[2],
+            pos: {x: 622, y: 164}, rotation: 0, stopPos: {},
+            anchor: {x: 0, y: 0}
+        },
+        {
+            color: "0xFFDC00", path: autoPenPaths[3],
+            pos: {x: 28, y: 459}, rotation: 0, stopPos: {},
+            anchor: {x: 0, y: 0}
+        },
+        {
+            color: "0x00EE08", path: autoPenPaths[4],
+            pos: {x: 694, y: 15}, rotation: 0, stopPos: {},
+            anchor: {x: 0, y: 0}
+        }
+    ];
+    /** AutoPens Structure:
+     * [{autoPen}, {autoPen}, ...]
+     * autoPen: {sprite, drawInterval, path,color}
+     */
+
+
+    const autoPens = [];
+    for (let i = 0; i < allPenDetails.length; i++) {
+        const penDetails = allPenDetails[i];
+        const pen = PIXI.Sprite.from(penUrl);
+        pen.x = penDetails.pos.x, pen.y = penDetails.pos.y;
+        pen.rotation = penDetails.rotation;
+        pen.anchor.set(penDetails.anchor.x, penDetails.anchor.y);
+        const drawInterval = setInterval(() => {
+            draw({'x': pen.x, 'y': pen.y}, true, penDetails.color)
+        }, 100);
+
+        const stopInterval = setInterval(() => {
+            const chosenCoordinate = Object.keys(penDetails.stopPos)[0];
+            const timeToClear = penDetails.stopPos.type === 'greater'
+                ? pen[chosenCoordinate] > penDetails.stopPos[chosenCoordinate]
+                : pen[chosenCoordinate] < penDetails.stopPos[chosenCoordinate];
+            if (timeToClear) {
+                clearInterval(drawInterval);
+                gsap.to(pen, {alpha: 0, duration: 5})
+            }
+        })
+        app.stage.addChild(pen)
+        gsap.from(pen, {
+            alpha: 0,
+            duration: 3
+        })
+        gsap.from(pen, {
+            duration: 25,
+            repeat: 0,
+            ease: "power1.inOut",
+            motionPath: {
+                path: penDetails.path,
+                curviness: 0.7
+            }
+        });
     }
-});*/
+
+}
+
+startAutoPens();
+
 
 // Coordinate Logger
 const logPath = [];
