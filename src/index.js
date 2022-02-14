@@ -19,13 +19,15 @@ app.view.style.border = '1px solid black';
 app.view.style.borderRadius = '8px'
 app.view.interactive = true;
 app.stage.sortableChildren = true;
+let selectedColor = undefined;
+const background = new PIXI.Graphics();
 // Draws points on the canvas
 const draw = ({x, y}, introScreen = false, color) => {
     if (!introScreen && x < 70) return;
     if (!introScreen) color = selectedColor._fillStyle.color;
     const point = new PIXI.Graphics();
     point.beginFill(color);
-    point.lineStyle(1, color);
+    point.lineStyle(0, color);
     point.drawCircle(0, 0, 4, 4);
     point.endFill();
     var texture = app.renderer.generateTexture(point);
@@ -58,10 +60,13 @@ const penColors = [
     {name: "yellow", color: "FFDC00"},
     {name: "purple", color: "AD00FF"},
 ];
-
+const autoPens = [];
+const intervals = [];
 const startAutoPens = () => {
-    /// Auto drawing pens for intro screen ///
+    /// Auto drawing pens for intro screen
     const penUrl = 'https://raw.githubusercontent.com/AveryKing/WeDraw/6914e51bbf45d821cc2d707b5f29a7196444003e/create_black_36dp.svg';
+
+    // Paths for pens to draw along
     const autoPenPaths = [
         [{"x": 731, "y": 458}, {"x": 778, "y": 327}, {"x": 659, "y": 199}, {"x": 743, "y": 60}],
         [{"x": 147, "y": 44}, {"x": 57, "y": 179}, {"x": 195, "y": 319}],
@@ -69,51 +74,61 @@ const startAutoPens = () => {
         [{"x": 28, "y": 359}, {"x": 126, "y": 205}, {"x": 309, "y": 248}, {"x": 344, "y": 426}, {"x": 549, "y": 325}],
         [{"x": 694, "y": 15}, {"x": 443, "y": 93}, {"x": 233, "y": 10}]
     ]
+    // Data for auto pens
     const autoPenDetails = [
         {
-            color: "0xff0000", path: autoPenPaths[0],
-            pos: {x: 731, y: 458}, rotation: 180,
-            anchor: {x: 0.9, y: 1.5}, stopPos: {y: 450, type: "greater"}
+            color: "0xff0000",
+            path: autoPenPaths[0],
+            pos: {x: 731, y: 458},
+            rotation: 180,
+            anchor: {x: 0.9, y: 1.5},
+            stopPos: {y: 450, type: "greater"}
         },
         {
-            color: "0x0036ff", path: autoPenPaths[1],
-            pos: {x: 114, y: 15}, rotation: 0, stopPos: {y: 45, type: "less"},
+            color: "0x0036ff",
+            path: autoPenPaths[1],
+            pos: {x: 114, y: 15},
+            rotation: 0,
+            stopPos: {y: 45, type: "less"},
             anchor: {x: 0, y: 0}
         },
         {
-            color: "0xAD00FF", path: autoPenPaths[2],
-            pos: {x: 622, y: 164}, rotation: 0, stopPos: {y:196 , type:"less"},
+            color: "0xAD00FF",
+            path: autoPenPaths[2],
+            pos: {x: 622, y: 164},
+            rotation: 0,
+            stopPos: {y: 196, type: "less"},
             anchor: {x: 0, y: 0}
         },
         {
-            color: "0xFFDC00", path: autoPenPaths[3],
-            pos: {x: 28, y: 459}, rotation: 0, stopPos: {y:450, type:"greater"},
+            color: "0xFFDC00",
+            path: autoPenPaths[3],
+            pos: {x: 28, y: 459},
+            rotation: 0,
+            stopPos: {y: 450, type: "greater"},
             anchor: {x: 0, y: 0}
         },
         {
-            color: "0x00EE08", path: autoPenPaths[4],
-            pos: {x: 694, y: 15}, rotation: 0, stopPos: {x:693, type:"greater"},
+            color: "0x00EE08",
+            path: autoPenPaths[4],
+            pos: {x: 694, y: 15},
+            rotation: 0,
+            stopPos: {x: 693, type: "greater"},
             anchor: {x: 0, y: 0}
         }
     ];
-    /** AutoPens Structure:
-     * [{autoPen}, {autoPen}, ...]
-     * autoPen: {sprite, drawInterval, path,color}
-     */
 
-
-    const autoPens = [];
     for (let i = 0; i < autoPenDetails.length; i++) {
         const penDetails = autoPenDetails[i];
         const pen = PIXI.Sprite.from(penUrl);
         pen.x = penDetails.pos.x, pen.y = penDetails.pos.y;
         pen.rotation = penDetails.rotation;
         pen.anchor.set(penDetails.anchor.x, penDetails.anchor.y);
-        const drawInterval = setInterval(() => {
+        const drawInterval = intervals.push(setInterval(() => {
             draw({'x': pen.x, 'y': pen.y}, true, penDetails.color)
-        }, 100);
+        }, 100));
 
-        const stopInterval = setInterval(() => {
+        const stopInterval = intervals.push(setInterval(() => {
             const chosenCoordinate = Object.keys(penDetails.stopPos)[0];
             const timeToClear = penDetails.stopPos.type === 'greater'
                 ? pen[chosenCoordinate] > penDetails.stopPos[chosenCoordinate]
@@ -122,7 +137,7 @@ const startAutoPens = () => {
                 clearInterval(drawInterval);
                 gsap.to(pen, {alpha: 0, duration: 5})
             }
-        })
+        }));
         app.stage.addChild(pen)
         gsap.from(pen, {
             alpha: 0,
@@ -138,11 +153,9 @@ const startAutoPens = () => {
             }
         });
     }
-
 }
 
 startAutoPens();
-
 
 const buttonGroup = new PIXI.Container();
 const buttonBackground = new PIXI.Graphics();
@@ -153,13 +166,13 @@ buttonBackground.endFill();
 buttonGroup.zIndex = 99999;
 buttonBackground.alpha = 0.6;
 buttonGroup.addChild(buttonBackground);
-gsap.from(buttonBackground, { alpha: 0 , duration: 7})
+gsap.from(buttonBackground, {alpha: 0, duration: 7})
 app.stage.addChild(buttonGroup);
 const prompt = new PIXI.Text('How would you like to draw?', new PIXI.TextStyle({fontSize: 20}));
 prompt.x = 270;
 prompt.y = 235;
 buttonGroup.addChild(prompt)
-gsap.from(prompt, { alpha: 0, duration: 6})
+gsap.from(prompt, {alpha: 0, duration: 6})
 const loginButtons = [
     {id: 1, text: '\t\t\t\t\tAlone', fontSize: 18, dir: 'left'},
     {id: 2, text: '\t\tWith Others', fontSize: 16, dir: 'right'}
@@ -191,44 +204,72 @@ for (var i = 0; i < loginButtons.length; i++) {
         gsap.to(button, 0.5, {pixi: {fillColor: 0xc9c9c9}});
     }
     button.pointerover = () => {
-        if(buttonsLoaded) gsap.to(button, 0.5, {pixi: {fillColor: 0x1BCCFF}});
+        if (buttonsLoaded) gsap.to(button, 0.5, {pixi: {fillColor: 0x1BCCFF}});
         highlight.x = button.x - 10;
         highlight.y = button.y - 10;
         if (!selected && buttonsLoaded) {
             gsap.to(highlight, 0.5, {pixi: {fillColor: 0x1BCCFF, alpha: 0.3}});
             selected = button.id;
-        } else if(button.id !== selected && buttonsLoaded) {
-                const xTo = button.id === 1 ? 260 : 410;
-                const xFrom = button.id === 1 ? 410 : 260;
-                gsap.fromTo(highlight, {x:xFrom} ,{x: xTo});
-                selected = button.id;
+        } else if (button.id !== selected && buttonsLoaded) {
+            const xTo = button.id === 1 ? 260 : 410;
+            const xFrom = button.id === 1 ? 410 : 260;
+            gsap.fromTo(highlight, {x: xFrom}, {x: xTo});
+            selected = button.id;
+        }
+
+
+    }
+
+    button.click = () => {
+        exitIntro()
+    }
+
+    loginButtons[i].button = button;
+
+
+    buttonGroup.addChild(button)
+    gsap.from(button, {
+        x: button.id === 1 ? -500 : 1000, duration: 3, ease: "circ", alpha: 0, onComplete: () => {
+            buttonsLoaded = true;
+        }
+    })
+
+}
+
+const exitIntro = () => {
+
+    intervals.forEach(interval => {
+        clearInterval(interval);
+    })
+    gsap.to(buttonGroup, {alpha: 0, duration: 2});
+    gsap.to(header, {alpha: 0, duration: 2});
+    loginButtons.forEach(button => {
+        gsap.to(button.button, {
+            alpha: 0,
+            duration: 2
+        })
+    })
+    gsap.to(app.stage, {
+        alpha:0,
+        duration:2,
+        onComplete: () => {
+            while(app.stage.children[0]) {
+                app.stage.removeChild(app.stage.children[0]);
             }
-
-
+            startApplication(1);
+        }
+    })
 
 
 }
-buttonGroup.addChild(button)
-gsap.from(button, {x: button.id === 1 ? -500 : 1000, duration:3, ease:"circ", alpha:0, onComplete: () => {
-    buttonsLoaded = true;
-    }})
 
-}
-
-// Coordinate Logger
-const logPath = [];
-app.view.onclick = (e) => {
-    const rect = app.view.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    logPath.push({x: x, y: y});
-    console.log(logPath);
-}
-/////////////////////////////////////
-
-const startApplication = () => {
+// Mode 1: Draw alone, Mode 2: Multiplayer
+const startApplication = (mode) => {
     let stageInteractive = true;
-
+    gsap.to(app.stage, {
+        alpha: 1,
+        duration: 2
+    })
     const toggleStageInteractive = () => {
         for (let i = 0; i < colorButtons.length; i++) {
             Object.values(colorButtons[i])[0].interactive = !stageInteractive;
@@ -237,7 +278,7 @@ const startApplication = () => {
         stageInteractive = !stageInteractive;
     }
     const artBoard = new PIXI.Container;
-    const background = new PIXI.Graphics();
+
     background.interactive = true;
     background.beginFill(0xffffff);
     background.drawRect(35, 0, 730, 500);
@@ -252,10 +293,11 @@ const startApplication = () => {
     background.mousedown = (e) => {
         if (!selectedColor) {
             return alert('Please select a color');
+        } else {
+            background.drawing = true;
         }
-        background.drawing = true;
-        draw(e.data.getLocalPosition(app.stage));
-    }
+        }
+
 
     background.pointermove = (e) => {
         if (background.drawing) {
@@ -275,7 +317,7 @@ const startApplication = () => {
     }
     const colorButtons = [];
     let firstYPosition = 30;
-    let selectedColor = undefined;
+
     const updateSelectedColor = (color) => {
         if (selectedColor) selectedColor.removeSelected();
         selectedColor = color;
@@ -310,6 +352,7 @@ const startApplication = () => {
 
         color.click = () => {
             updateSelectedColor(colorButtons[i][color.name]);
+            console.log(selectedColor)
         }
         colorsObj[color.name] = color
         colorButtons.push(colorsObj);
@@ -417,7 +460,6 @@ const startApplication = () => {
             const buttonType = buttons[i].text === "Yes" ? 1 : 2;
             button.click = () => {
                 if (buttonType === 1) background.doClear();
-
                 gsap.to(dialogContainer, {
                     duration: 1,
                     y: -300,
@@ -440,6 +482,8 @@ const startApplication = () => {
     artBoard.addChild(background);
     app.stage.addChild(artBoard);
 }
+
+
 
 document.body.appendChild(app.view)
 
