@@ -39,7 +39,7 @@ const draw = ({x, y}, introScreen = false, color) => {
 const header = PIXI.Sprite.from('https://i.imgur.com/dOigQ9f.png');
 header.scale.set(0.8)
 header.x = 200;
-header.zIndex = 1000;
+header.zIndex = -10000;
 header.y = 100;
 app.stage.addChild(header);
 gsap.from(header, {
@@ -87,7 +87,7 @@ const startAutoPens = () => {
         },
         {
             color: "0xFFDC00", path: autoPenPaths[3],
-            pos: {x: 28, y: 459}, rotation: 0, stopPos: {y:481, type:"greater"},
+            pos: {x: 28, y: 459}, rotation: 0, stopPos: {y:450, type:"greater"},
             anchor: {x: 0, y: 0}
         },
         {
@@ -153,12 +153,13 @@ buttonBackground.endFill();
 buttonGroup.zIndex = 99999;
 buttonBackground.alpha = 0.6;
 buttonGroup.addChild(buttonBackground);
+gsap.from(buttonBackground, { alpha: 0 , duration: 7})
 app.stage.addChild(buttonGroup);
 const prompt = new PIXI.Text('How would you like to draw?', new PIXI.TextStyle({fontSize: 20}));
 prompt.x = 270;
 prompt.y = 235;
 buttonGroup.addChild(prompt)
-gsap.from(prompt, { alpha: 0, duration: 3})
+gsap.from(prompt, { alpha: 0, duration: 6})
 const loginButtons = [
     {id: 1, text: '\t\t\t\t\tAlone', fontSize: 18, dir: 'left'},
     {id: 2, text: '\t\tWith Others', fontSize: 16, dir: 'right'}
