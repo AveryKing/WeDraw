@@ -19,7 +19,6 @@ app.view.style.border = '1px solid black';
 app.view.style.borderRadius = '8px'
 app.view.interactive = true;
 app.stage.sortableChildren = true;
-
 // Draws points on the canvas
 const draw = ({x, y}, introScreen = false, color) => {
     if (!introScreen && x < 70) return;
@@ -37,7 +36,7 @@ const draw = ({x, y}, introScreen = false, color) => {
 }
 
 // "WeDraw" logo on intro screen
-const header = PIXI.Sprite.from('https://i.imgur.com/S8iM1Um.png');
+const header = PIXI.Sprite.from('https://i.imgur.com/dOigQ9f.png');
 header.scale.set(0.8)
 header.x = 200;
 header.zIndex = 1000;
@@ -46,8 +45,8 @@ app.stage.addChild(header);
 gsap.from(header, {
     duration: 3,
     y: -300,
-    alpha: 0,
-    ease: "bounce.out"
+    alpha: -1,
+    ease: "circ"
 })
 
 // Default pen colors
@@ -69,10 +68,8 @@ const startAutoPens = () => {
         [{"x": 622, "y": 164}, {"x": 409, "y": 348}, {"x": 684, "y": 431}],
         [{"x": 28, "y": 359}, {"x": 126, "y": 205}, {"x": 309, "y": 248}, {"x": 344, "y": 426}, {"x": 549, "y": 325}],
         [{"x": 694, "y": 15}, {"x": 443, "y": 93}, {"x": 233, "y": 10}]
-
-
     ]
-    const allPenDetails = [
+    const autoPenDetails = [
         {
             color: "0xff0000", path: autoPenPaths[0],
             pos: {x: 731, y: 458}, rotation: 180,
@@ -85,17 +82,17 @@ const startAutoPens = () => {
         },
         {
             color: "0xAD00FF", path: autoPenPaths[2],
-            pos: {x: 622, y: 164}, rotation: 0, stopPos: {},
+            pos: {x: 622, y: 164}, rotation: 0, stopPos: {y:196 , type:"less"},
             anchor: {x: 0, y: 0}
         },
         {
             color: "0xFFDC00", path: autoPenPaths[3],
-            pos: {x: 28, y: 459}, rotation: 0, stopPos: {},
+            pos: {x: 28, y: 459}, rotation: 0, stopPos: {y:481, type:"greater"},
             anchor: {x: 0, y: 0}
         },
         {
             color: "0x00EE08", path: autoPenPaths[4],
-            pos: {x: 694, y: 15}, rotation: 0, stopPos: {},
+            pos: {x: 694, y: 15}, rotation: 0, stopPos: {x:693, type:"greater"},
             anchor: {x: 0, y: 0}
         }
     ];
@@ -106,8 +103,8 @@ const startAutoPens = () => {
 
 
     const autoPens = [];
-    for (let i = 0; i < allPenDetails.length; i++) {
-        const penDetails = allPenDetails[i];
+    for (let i = 0; i < autoPenDetails.length; i++) {
+        const penDetails = autoPenDetails[i];
         const pen = PIXI.Sprite.from(penUrl);
         pen.x = penDetails.pos.x, pen.y = penDetails.pos.y;
         pen.rotation = penDetails.rotation;
@@ -146,6 +143,76 @@ const startAutoPens = () => {
 
 startAutoPens();
 
+
+const buttonGroup = new PIXI.Container();
+const buttonBackground = new PIXI.Graphics();
+buttonBackground.beginFill(0xffffff);
+buttonBackground.lineStyle(1, 0x000000);
+buttonBackground.drawRoundedRect(235, 225, 320, 100, 8);
+buttonBackground.endFill();
+buttonGroup.zIndex = 99999;
+buttonBackground.alpha = 0.6;
+buttonGroup.addChild(buttonBackground);
+app.stage.addChild(buttonGroup);
+const prompt = new PIXI.Text('How would you like to draw?', new PIXI.TextStyle({fontSize: 20}));
+prompt.x = 270;
+prompt.y = 235;
+buttonGroup.addChild(prompt)
+gsap.from(prompt, { alpha: 0, duration: 3})
+const loginButtons = [
+    {id: 1, text: '\t\t\t\t\tAlone', fontSize: 18, dir: 'left'},
+    {id: 2, text: '\t\tWith Others', fontSize: 16, dir: 'right'}
+]
+let selected;
+const highlight = new PIXI.Graphics();
+highlight.beginFill(0xffffff);
+highlight.drawRoundedRect(0, 0, 120, 60, 20);
+highlight.alpha = 0.0;
+highlight.endFill();
+buttonGroup.addChild(highlight);
+let buttonsLoaded = false;
+for (var i = 0; i < loginButtons.length; i++) {
+    const button = new PIXI.Graphics();
+    button.lineStyle(1, 0x000000);
+    button.beginFill(0xc9c9c9);
+    const text = new PIXI.Text(loginButtons[i].text, new PIXI.TextStyle({fontSize: loginButtons[i].fontSize}));
+    button.id = loginButtons[i].id;
+    text.y += 10;
+    button.drawRoundedRect(0, 0, 100, 40, 8);
+    button.endFill();
+    button.addChild(text);
+    button.alpha = 0.85
+    button.x = 150 * (i + 1) + 120
+    button.y = 270
+    button.buttonMode = true;
+    button.interactive = true;
+    button.pointerout = () => {
+        gsap.to(button, 0.5, {pixi: {fillColor: 0xc9c9c9}});
+    }
+    button.pointerover = () => {
+        if(buttonsLoaded) gsap.to(button, 0.5, {pixi: {fillColor: 0x1BCCFF}});
+        highlight.x = button.x - 10;
+        highlight.y = button.y - 10;
+        if (!selected && buttonsLoaded) {
+            gsap.to(highlight, 0.5, {pixi: {fillColor: 0x1BCCFF, alpha: 0.3}});
+            selected = button.id;
+        } else if(button.id !== selected && buttonsLoaded) {
+                const xTo = button.id === 1 ? 260 : 410;
+                const xFrom = button.id === 1 ? 410 : 260;
+                gsap.fromTo(highlight, {x:xFrom} ,{x: xTo});
+                selected = button.id;
+            }
+
+
+
+
+}
+buttonGroup.addChild(button)
+gsap.from(button, {x: button.id === 1 ? -500 : 1000, duration:3, ease:"circ", alpha:0, onComplete: () => {
+    buttonsLoaded = true;
+    }})
+
+}
 
 // Coordinate Logger
 const logPath = [];
